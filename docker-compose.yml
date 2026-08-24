@@ -1,0 +1,27 @@
+services:
+  dashboard-api:
+    build:
+      context: ./backend/ServerDashboard.Api
+    restart: unless-stopped
+    network_mode: host
+    # Root avoids matching the host's `docker` group GID just to read the socket below.
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # GPU stats require the NVIDIA Container Toolkit on the host (not installed yet, per
+    # https://github.com/NVIDIA/nvidia-container-toolkit). Once it is, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  dashboard-ui:
+    build:
+      context: ./frontend/server-dashboard-ui
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - dashboard-api
