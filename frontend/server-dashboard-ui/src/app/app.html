@@ -7,6 +7,7 @@
   <div class="grid">
     <app-cpu-ram-card [system]="state.system()" />
     <app-gpu-card [gpu]="state.gpu()" />
-    <app-docker-containers-card [containers]="state.containers()" />
   </div>
+
+  <app-docker-containers-card [containers]="state.containers()" />
 </main>
