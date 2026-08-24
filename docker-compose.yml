@@ -8,15 +8,13 @@ services:
     user: root
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    # GPU stats require the NVIDIA Container Toolkit on the host (not installed yet, per
-    # https://github.com/NVIDIA/nvidia-container-toolkit). Once it is, uncomment:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: all
-    #           capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   dashboard-ui:
     build:
