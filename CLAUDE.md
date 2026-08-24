@@ -88,11 +88,22 @@ client's first paint, before its SignalR connection finishes negotiating).
   mapping is pure and unit tested in `DockerContainerMapper`. As with GPU, there's also a
   test against the real service confirming the empty-list fallback actually happens here.
 
-**Not yet implemented**: a `BackgroundService` (`MetricsBroadcaster`) that polls
-`SystemMetricsService`/`GpuMetricsService`/`DockerMetricsService` on an interval (~2-3s),
-assembles a new `ServerSnapshot`, writes it to the `SnapshotStore`, and pushes it to all
-clients via `IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. All three
-metric services are registered in DI but nothing calls them yet.
+- `Services/MetricsBroadcaster` — a `BackgroundService` (registered via
+  `AddHostedService<MetricsBroadcaster>()`) that polls all three metric services every 3s,
+  assembles a new `ServerSnapshot`, writes it to the `SnapshotStore`, and pushes it via
+  `IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. The gather-and-
+  broadcast logic lives in a public `RunOnceAsync` method (rather than only in the usual
+  protected `ExecuteAsync`) specifically so a test can invoke one cycle directly without
+  waiting on the real interval loop.
+  - **Important failure-handling detail, found by actually running the app**: an unhandled
+    exception inside a `BackgroundService`'s `ExecuteAsync` stops the *entire host*
+    (`HostOptions.BackgroundServiceExceptionBehavior` defaults to `StopHost`) — not just
+    that service. `SystemMetricsService` always throws on the Windows dev laptop (no
+    `/proc`), which reproduced this immediately. `RunOnceAsync` therefore catches any
+    non-cancellation exception from the gather step, logs it via the injected
+    `ILogger<MetricsBroadcaster>`, and returns without updating the snapshot or
+    broadcasting — leaving the previous snapshot in place and letting the next interval
+    tick retry, rather than taking down the whole app over one bad cycle.
 
 **Frontend** (once scaffolded): `SignalRService` wraps a `HubConnection` to `/hubs/metrics`;
 `DashboardStateService` seeds from `GET /api/status` then stays updated from the SignalR

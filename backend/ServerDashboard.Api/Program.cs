@@ -11,6 +11,7 @@ builder.Services.AddSingleton<ISnapshotStore, SnapshotStore>();
 builder.Services.AddSingleton<ISystemMetricsService, SystemMetricsService>();
 builder.Services.AddSingleton<IGpuMetricsService, GpuMetricsService>();
 builder.Services.AddSingleton<IDockerMetricsService, DockerMetricsService>();
+builder.Services.AddHostedService<MetricsBroadcaster>();
 
 const string DevCorsPolicy = "DevCorsPolicy";
 builder.Services.AddCors(options =>
