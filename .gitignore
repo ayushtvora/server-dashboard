@@ -1,0 +1,13 @@
+# .NET build output
+bin/
+obj/
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# Editor/OS
+.vs/
+.vscode/
+*.user
