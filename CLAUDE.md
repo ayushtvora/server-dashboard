@@ -25,10 +25,18 @@ The .NET SDK is not on PATH in the dev environment — invoke it via full path, 
 # from backend/ServerDashboard.Api/
 "C:\Program Files\dotnet\dotnet.exe" build
 "C:\Program Files\dotnet\dotnet.exe" run --urls "http://localhost:5080"
+
+# from backend/ServerDashboard.Api.Tests/
+"C:\Program Files\dotnet\dotnet.exe" test
 ```
 
 Once running, `GET http://localhost:5080/api/status` returns the current `ServerSnapshot`
 as JSON. Swagger UI is available at `/swagger` in Development.
+
+Stop a leftover `dotnet run` process before rebuilding if you see `MSB3027`/file-locked
+build errors (`Get-Process -Id <pid>` / `Stop-Process -Id <pid> -Force`, pid from the
+error's "locked by" line) — `dotnet run` doesn't exit when the tool call that started it
+ends.
 
 The frontend (`frontend/server-dashboard-ui`, Angular, standalone components + signals) has
 not been scaffolded yet — see the build order below.
@@ -52,13 +60,20 @@ client's first paint, before its SignalR connection finishes negotiating).
   hub itself (the hub has no client-invokable methods for v1).
 - `Controllers/StatusController` — `GET /api/status`, reads `ISnapshotStore.Current`.
 
+- `Services/ISystemMetricsService` / `SystemMetricsService` — reads `/proc/stat` (two
+  samples ~500ms apart) and `/proc/meminfo` to produce `SystemStats`. The file I/O is
+  intentionally thin and Linux-only (untestable on the dev laptop); the actual math lives
+  in `ProcStatParser`/`MemInfoParser`, pure static parsing functions with no I/O, covered by
+  unit tests in `ServerDashboard.Api.Tests` using sample `/proc` text. This is the pattern
+  to follow for `GpuMetricsService`/`DockerMetricsService` too: keep parsing/math separable
+  and testable from the actual OS/process/socket calls.
+
 **Not yet implemented**: a `BackgroundService` (`MetricsBroadcaster`) that polls the
 metric-collection services on an interval (~2-3s), assembles a new `ServerSnapshot`, writes
 it to the `SnapshotStore`, and pushes it to all clients via
-`IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. The metric-collection
-services it will depend on:
-- `SystemMetricsService` — CPU % and RAM % from `/proc/stat` (two samples ~1s apart) and
-  `/proc/meminfo`. Linux-only; cannot be exercised on the Windows dev laptop.
+`IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. It isn't wired up yet
+because `GpuMetricsService`/`DockerMetricsService` don't exist yet — `SystemMetricsService`
+is currently registered in DI but nothing calls it.
 - `GpuMetricsService` — shells out to
   `nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits`
   and parses the CSV. Must return `GpuStats.Available = false` rather than throwing when the

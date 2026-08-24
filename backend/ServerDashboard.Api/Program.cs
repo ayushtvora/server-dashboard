@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ISnapshotStore, SnapshotStore>();
+builder.Services.AddSingleton<ISystemMetricsService, SystemMetricsService>();
 
 const string DevCorsPolicy = "DevCorsPolicy";
 builder.Services.AddCors(options =>
