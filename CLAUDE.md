@@ -77,14 +77,22 @@ client's first paint, before its SignalR connection finishes negotiating).
   test that calls the real service directly to confirm the fallback path itself works (not
   just the parser), since the dev laptop genuinely has no `nvidia-smi`.
 
-**Not yet implemented**: a `BackgroundService` (`MetricsBroadcaster`) that polls the
-metric-collection services on an interval (~2-3s), assembles a new `ServerSnapshot`, writes
-it to the `SnapshotStore`, and pushes it to all clients via
-`IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. It isn't wired up yet
-because `DockerMetricsService` doesn't exist yet — `SystemMetricsService`/`GpuMetricsService`
-are registered in DI but nothing calls them.
-- `DockerMetricsService` — uses the `Docker.DotNet` NuGet package against
-  `unix:///var/run/docker.sock` to list containers with state/health/CPU/mem.
+- `Services/IDockerMetricsService` / `DockerMetricsService` — uses the `Docker.DotNet` NuGet
+  package against the local Docker socket (`unix:///var/run/docker.sock` on Linux,
+  `npipe://./pipe/docker_engine` on Windows) to list containers and pull one-shot stats per
+  container. Broadly catches connection failures (no daemon reachable — true on the dev
+  laptop, which has no Docker installed) and returns an empty list rather than throwing,
+  since a momentary/dev-time Docker outage shouldn't crash the whole app. CPU%/memory-MB
+  math is pure and unit tested in `DockerStatsCalculator` (mirrors `docker stats`'s formula:
+  `(cpuDelta/systemDelta) * onlineCpus * 100`, and usage-minus-cache for memory); name/field
+  mapping is pure and unit tested in `DockerContainerMapper`. As with GPU, there's also a
+  test against the real service confirming the empty-list fallback actually happens here.
+
+**Not yet implemented**: a `BackgroundService` (`MetricsBroadcaster`) that polls
+`SystemMetricsService`/`GpuMetricsService`/`DockerMetricsService` on an interval (~2-3s),
+assembles a new `ServerSnapshot`, writes it to the `SnapshotStore`, and pushes it to all
+clients via `IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. All three
+metric services are registered in DI but nothing calls them yet.
 
 **Frontend** (once scaffolded): `SignalRService` wraps a `HubConnection` to `/hubs/metrics`;
 `DashboardStateService` seeds from `GET /api/status` then stays updated from the SignalR
