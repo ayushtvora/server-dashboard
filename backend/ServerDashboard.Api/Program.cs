@@ -9,6 +9,7 @@ builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ISnapshotStore, SnapshotStore>();
 builder.Services.AddSingleton<ISystemMetricsService, SystemMetricsService>();
+builder.Services.AddSingleton<IGpuMetricsService, GpuMetricsService>();
 
 const string DevCorsPolicy = "DevCorsPolicy";
 builder.Services.AddCors(options =>

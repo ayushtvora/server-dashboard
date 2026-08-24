@@ -68,17 +68,21 @@ client's first paint, before its SignalR connection finishes negotiating).
   to follow for `GpuMetricsService`/`DockerMetricsService` too: keep parsing/math separable
   and testable from the actual OS/process/socket calls.
 
+- `Services/IGpuMetricsService` / `GpuMetricsService` — shells out to `nvidia-smi
+  --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu
+  --format=csv,noheader,nounits` via `System.Diagnostics.Process` and parses the CSV.
+  Catches `Win32Exception` (thrown when the executable isn't found — the real case on the
+  dev laptop) and parse failures, returning `GpuStats.Available = false` instead of
+  throwing. CSV parsing lives in the pure, unit-tested `NvidiaSmiParser`; there's also a
+  test that calls the real service directly to confirm the fallback path itself works (not
+  just the parser), since the dev laptop genuinely has no `nvidia-smi`.
+
 **Not yet implemented**: a `BackgroundService` (`MetricsBroadcaster`) that polls the
 metric-collection services on an interval (~2-3s), assembles a new `ServerSnapshot`, writes
 it to the `SnapshotStore`, and pushes it to all clients via
 `IHubContext<MetricsHub>.Clients.All.SendAsync("snapshot", snapshot)`. It isn't wired up yet
-because `GpuMetricsService`/`DockerMetricsService` don't exist yet — `SystemMetricsService`
-is currently registered in DI but nothing calls it.
-- `GpuMetricsService` — shells out to
-  `nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits`
-  and parses the CSV. Must return `GpuStats.Available = false` rather than throwing when the
-  binary isn't found (true on the dev laptop; the CSV-parsing logic should still be unit
-  testable there against sample output).
+because `DockerMetricsService` doesn't exist yet — `SystemMetricsService`/`GpuMetricsService`
+are registered in DI but nothing calls them.
 - `DockerMetricsService` — uses the `Docker.DotNet` NuGet package against
   `unix:///var/run/docker.sock` to list containers with state/health/CPU/mem.
 
