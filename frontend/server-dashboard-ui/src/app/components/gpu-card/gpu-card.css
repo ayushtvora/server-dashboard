@@ -1,0 +1,19 @@
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.metric {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+
+.label {
+  color: #6b7280;
+}
+
+.empty {
+  color: #6b7280;
+}

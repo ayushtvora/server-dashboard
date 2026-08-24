@@ -1,0 +1,30 @@
+<section class="card">
+  <h2>Docker Containers</h2>
+
+  @if (containers().length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Image</th>
+          <th>State</th>
+          <th>CPU</th>
+          <th>Memory</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of containers(); track c.id) {
+          <tr>
+            <td>{{ c.name }}</td>
+            <td>{{ c.image }}</td>
+            <td>{{ c.state }} <span class="status">({{ c.status }})</span></td>
+            <td>{{ c.cpuUsagePercent | number: '1.0-1' }}%</td>
+            <td>{{ c.memoryUsageMb | number: '1.0-0' }} MB</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p class="empty">No containers running.</p>
+  }
+</section>

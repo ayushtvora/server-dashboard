@@ -1,0 +1,24 @@
+<section class="card">
+  <h2>GPU</h2>
+
+  @if (gpu(); as g) {
+    @if (g.available) {
+      <div class="metric">
+        <span class="label">Utilization</span>
+        <span class="value">{{ g.utilizationPercent | number: '1.0-1' }}%</span>
+      </div>
+      <div class="metric">
+        <span class="label">Memory</span>
+        <span class="value">{{ g.memoryUsedMb | number: '1.0-0' }} / {{ g.memoryTotalMb | number: '1.0-0' }} MB</span>
+      </div>
+      <div class="metric">
+        <span class="label">Temp</span>
+        <span class="value">{{ g.temperatureCelsius | number: '1.0-0' }}&deg;C</span>
+      </div>
+    } @else {
+      <p class="empty">No GPU detected.</p>
+    }
+  } @else {
+    <p class="empty">No data yet.</p>
+  }
+</section>

@@ -1,0 +1,19 @@
+<section class="card">
+  <h2>CPU / RAM</h2>
+
+  @if (system(); as s) {
+    <div class="metric">
+      <span class="label">CPU</span>
+      <span class="value">{{ s.cpuUsagePercent | number: '1.0-1' }}%</span>
+    </div>
+    <div class="metric">
+      <span class="label">RAM</span>
+      <span class="value">
+        {{ s.memoryUsedMb | number: '1.0-0' }} / {{ s.memoryTotalMb | number: '1.0-0' }} MB
+        ({{ s.memoryUsagePercent | number: '1.0-1' }}%)
+      </span>
+    </div>
+  } @else {
+    <p class="empty">No data yet.</p>
+  }
+</section>

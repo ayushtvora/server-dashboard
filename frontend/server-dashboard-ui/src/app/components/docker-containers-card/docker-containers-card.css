@@ -1,0 +1,26 @@
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.status {
+  color: #6b7280;
+  font-size: 0.85em;
+}
+
+.empty {
+  color: #6b7280;
+}
