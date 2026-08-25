@@ -1,1 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
+
+:root {
+  --color-bg: #0f1115;
+  --color-surface: #1a1d24;
+  --color-border: #2b2f38;
+  --color-text: #e5e7eb;
+  --color-text-muted: #9ca3af;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  color-scheme: dark;
+}

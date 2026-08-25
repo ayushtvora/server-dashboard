@@ -1,5 +1,6 @@
 .card {
-  border: 1px solid #e5e7eb;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
   padding: 1rem;
 }
@@ -11,9 +12,9 @@
 }
 
 .label {
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
 
 .empty {
-  color: #6b7280;
+  color: var(--color-text-muted);
 }
