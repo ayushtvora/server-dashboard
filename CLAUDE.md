@@ -24,22 +24,31 @@ The .NET SDK is not on PATH in the dev environment — invoke it via full path, 
 ```
 # from backend/ServerDashboard.Api/
 "C:\Program Files\dotnet\dotnet.exe" build
-"C:\Program Files\dotnet\dotnet.exe" run --urls "http://localhost:5080"
+"C:\Program Files\dotnet\dotnet.exe" run
 
 # from backend/ServerDashboard.Api.Tests/
 "C:\Program Files\dotnet\dotnet.exe" test
 ```
 
-Once running, `GET http://localhost:5080/api/status` returns the current `ServerSnapshot`
-as JSON. Swagger UI is available at `/swagger` in Development.
+`dotnet run` listens on `http://localhost:5035` (from `Properties/launchSettings.json`'s
+`http` profile — no `--urls` override needed). `GET http://localhost:5035/api/status`
+returns the current `ServerSnapshot` as JSON, and Swagger UI is available at `/swagger` in
+Development. 5035 is also what the frontend's dev environment
+(`src/environments/environment.development.ts`) and the production nginx config point at,
+so keep them in sync if this ever changes.
 
 Stop a leftover `dotnet run` process before rebuilding if you see `MSB3027`/file-locked
 build errors (`Get-Process -Id <pid>` / `Stop-Process -Id <pid> -Force`, pid from the
 error's "locked by" line) — `dotnet run` doesn't exit when the tool call that started it
 ends.
 
-The frontend (`frontend/server-dashboard-ui`, Angular, standalone components + signals) has
-not been scaffolded yet — see the build order below.
+```
+# from frontend/server-dashboard-ui/
+npm install
+npm start            # dev server at http://localhost:4200, calls the API at localhost:5035
+npm test             # vitest, via the @angular/build:unit-test builder
+npm run build
+```
 
 ## Architecture
 
@@ -105,10 +114,34 @@ client's first paint, before its SignalR connection finishes negotiating).
     broadcasting — leaving the previous snapshot in place and letting the next interval
     tick retry, rather than taking down the whole app over one bad cycle.
 
-**Frontend** (once scaffolded): `SignalRService` wraps a `HubConnection` to `/hubs/metrics`;
-`DashboardStateService` seeds from `GET /api/status` then stays updated from the SignalR
-stream, exposing Angular signals to presentational components (`server-status-badge`,
-`cpu-ram-card`, `gpu-card`, `docker-containers-card`).
+**Frontend** (`frontend/server-dashboard-ui`, Angular standalone components + signals):
+`TypeScript` interfaces in `src/app/models/server-snapshot.model.ts` mirror the backend's
+`record` types 1:1 (`SystemStats`, `GpuStats`, `ContainerStats`, `ServerSnapshot`).
+
+- `Services/SignalRService` wraps a `HubConnection` to `${environment.apiBaseUrl}/hubs/metrics`,
+  exposing incoming `"snapshot"` pushes as an RxJS `snapshots$` observable. The connection
+  itself is built by a factory function behind an `HUB_CONNECTION_FACTORY` injection token
+  (rather than constructed inline) specifically so tests can substitute a fake connection
+  without touching real SignalR/WebSocket machinery.
+- `Services/DashboardStateService` is the frontend's equivalent of the backend's
+  `SnapshotStore`: `init()` subscribes to `SignalRService.snapshots$` and also fires a
+  `GET /api/status` HTTP seed, writing either into one `snapshot` signal (last write wins,
+  so a SignalR push that arrives before the HTTP seed resolves is not clobbered by it).
+  `serverUp`/`system`/`gpu`/`containers` are `computed()` signals derived from it, with safe
+  defaults (`false`/`null`/`[]`) before the first snapshot arrives.
+- `Components/` — presentational, `input()`-only components with no injected state:
+  `server-status-badge`, `cpu-ram-card`, `gpu-card`, `docker-containers-card`. `App` (in
+  `app.ts`/`app.html`) injects `DashboardStateService`, calls `init()` in `ngOnInit`, and
+  wires its signals into the components' inputs.
+- `environments/environment.ts` (production, `apiBaseUrl: ''` — same-origin, since nginx
+  reverse-proxies `/api` and `/hubs`) vs. `environment.development.ts`
+  (`apiBaseUrl: 'http://localhost:5035'`, swapped in by the `development` build
+  configuration's `fileReplacements`) is how the frontend targets the right backend in each
+  environment.
+- Tests use Vitest (via the `@angular/build:unit-test` builder), with Angular's
+  `HttpTestingController` to assert on the `/api/status` request in
+  `dashboard-state.service.spec.ts`, and the `HUB_CONNECTION_FACTORY` token swapped for a
+  fake hub connection in `signalr.service.spec.ts`.
 
 **Deployment**: two Docker Compose services — `dashboard-api` (needs access to
 `/var/run/docker.sock` and to invoke the host's `nvidia-smi`; `network_mode: host` is the
