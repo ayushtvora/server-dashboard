@@ -25,7 +25,13 @@ class FakeHubConnection {
 const sampleSnapshot: ServerSnapshot = {
   timestampUtc: '2026-08-24T00:00:00.000Z',
   serverUp: true,
-  system: { cpuUsagePercent: 10, memoryUsagePercent: 20, memoryTotalMb: 1000, memoryUsedMb: 200 },
+  system: {
+    cpuUsagePercent: 10,
+    memoryUsagePercent: 20,
+    memoryTotalMb: 1000,
+    memoryUsedMb: 200,
+    cpuTemperatureCelsius: 45,
+  },
   gpu: {
     available: false,
     utilizationPercent: null,

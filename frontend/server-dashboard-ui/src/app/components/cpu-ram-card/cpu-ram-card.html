@@ -6,6 +6,12 @@
       <span class="label">CPU</span>
       <span class="value">{{ s.cpuUsagePercent | number: '1.0-1' }}%</span>
     </div>
+    @if (s.cpuTemperatureCelsius !== null) {
+      <div class="metric">
+        <span class="label">CPU Temp</span>
+        <span class="value">{{ s.cpuTemperatureCelsius | number: '1.0-0' }}&deg;C</span>
+      </div>
+    }
     <div class="metric">
       <span class="label">RAM</span>
       <span class="value">

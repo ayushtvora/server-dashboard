@@ -9,6 +9,7 @@ public class SystemMetricsService : ISystemMetricsService
 {
     private const string ProcStatPath = "/proc/stat";
     private const string MemInfoPath = "/proc/meminfo";
+    private const string ThermalClassPath = "/sys/class/thermal";
     private static readonly TimeSpan CpuSampleInterval = TimeSpan.FromMilliseconds(500);
 
     public async Task<SystemStats> GetCurrentAsync(CancellationToken cancellationToken = default)
@@ -34,6 +35,39 @@ public class SystemMetricsService : ISystemMetricsService
             ? (double)(mem.TotalKb - mem.AvailableKb) / mem.TotalKb * 100.0
             : 0;
 
-        return new SystemStats(cpuUsagePercent, memoryUsagePercent, memoryTotalMb, memoryUsedMb);
+        double? cpuTemperatureCelsius = await ReadCpuTemperatureCelsiusAsync(cancellationToken);
+
+        return new SystemStats(
+            cpuUsagePercent, memoryUsagePercent, memoryTotalMb, memoryUsedMb, cpuTemperatureCelsius);
+    }
+
+    // Not every system exposes thermal zones (e.g. some VMs/containers), so
+    // this degrades to null rather than throwing, the same way GpuStats does
+    // for "no data available".
+    private static async Task<double?> ReadCpuTemperatureCelsiusAsync(CancellationToken cancellationToken)
+    {
+        if (!Directory.Exists(ThermalClassPath))
+        {
+            return null;
+        }
+
+        var zones = new List<ThermalZoneParser.ThermalZone>();
+
+        foreach (var zoneDir in Directory.EnumerateDirectories(ThermalClassPath, "thermal_zone*"))
+        {
+            try
+            {
+                string type = (await File.ReadAllTextAsync(Path.Combine(zoneDir, "type"), cancellationToken)).Trim();
+                string temp = await File.ReadAllTextAsync(Path.Combine(zoneDir, "temp"), cancellationToken);
+                zones.Add(new ThermalZoneParser.ThermalZone(type, temp));
+            }
+            catch (IOException)
+            {
+                // A zone can disappear or be unreadable between the directory
+                // listing and the read; just skip it.
+            }
+        }
+
+        return ThermalZoneParser.SelectCpuTemperatureCelsius(zones);
     }
 }

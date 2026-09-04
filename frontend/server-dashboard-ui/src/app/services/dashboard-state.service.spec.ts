@@ -11,7 +11,13 @@ function makeSnapshot(overrides: Partial<ServerSnapshot> = {}): ServerSnapshot {
   return {
     timestampUtc: '2026-08-24T00:00:00.000Z',
     serverUp: true,
-    system: { cpuUsagePercent: 1, memoryUsagePercent: 2, memoryTotalMb: 3, memoryUsedMb: 4 },
+    system: {
+      cpuUsagePercent: 1,
+      memoryUsagePercent: 2,
+      memoryTotalMb: 3,
+      memoryUsedMb: 4,
+      cpuTemperatureCelsius: null,
+    },
     gpu: {
       available: false,
       utilizationPercent: null,

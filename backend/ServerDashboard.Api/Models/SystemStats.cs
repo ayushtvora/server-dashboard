@@ -4,5 +4,6 @@ public record SystemStats(
     double CpuUsagePercent,
     double MemoryUsagePercent,
     long MemoryTotalMb,
-    long MemoryUsedMb
+    long MemoryUsedMb,
+    double? CpuTemperatureCelsius
 );

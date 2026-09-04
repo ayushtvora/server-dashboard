@@ -11,7 +11,8 @@ namespace ServerDashboard.Api.Tests;
 public class MetricsBroadcasterTests
 {
     private static readonly SystemStats SampleSystemStats = new(
-        CpuUsagePercent: 12.3, MemoryUsagePercent: 45.6, MemoryTotalMb: 16000, MemoryUsedMb: 7296);
+        CpuUsagePercent: 12.3, MemoryUsagePercent: 45.6, MemoryTotalMb: 16000, MemoryUsedMb: 7296,
+        CpuTemperatureCelsius: 55.0);
 
     private static readonly GpuStats SampleGpuStats = new(
         Available: true, UtilizationPercent: 5, MemoryUsedMb: 100, MemoryTotalMb: 8000, TemperatureCelsius: 40);

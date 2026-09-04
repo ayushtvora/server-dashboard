@@ -3,6 +3,7 @@ export interface SystemStats {
   memoryUsagePercent: number;
   memoryTotalMb: number;
   memoryUsedMb: number;
+  cpuTemperatureCelsius: number | null;
 }
 
 export interface GpuStats {
