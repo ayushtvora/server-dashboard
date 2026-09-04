@@ -21,6 +21,7 @@ export interface ContainerStats {
   image: string;
   state: string;
   status: string;
+  createdAtUtc: string;
   cpuUsagePercent: number;
   memoryUsageMb: number;
 }

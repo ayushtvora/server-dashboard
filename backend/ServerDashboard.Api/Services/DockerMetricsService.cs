@@ -41,6 +41,7 @@ public class DockerMetricsService : IDockerMetricsService, IDisposable
                     container.Image,
                     container.State,
                     container.Status,
+                    new DateTimeOffset(container.Created.ToUniversalTime()),
                     cpuPercent,
                     memoryMb));
             }

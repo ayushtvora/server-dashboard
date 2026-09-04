@@ -5,15 +5,40 @@
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Image</th>
-          <th>State</th>
-          <th>CPU</th>
-          <th>Memory</th>
+          <th [attr.aria-sort]="ariaSortFor('name')">
+            <button type="button" (click)="setSort('name')">
+              Name
+              <span class="sort-indicator">{{ sortColumn() === 'name' ? (sortDirection() === 'asc' ? '▲' : '▼') : '' }}</span>
+            </button>
+          </th>
+          <th [attr.aria-sort]="ariaSortFor('image')">
+            <button type="button" (click)="setSort('image')">
+              Image
+              <span class="sort-indicator">{{ sortColumn() === 'image' ? (sortDirection() === 'asc' ? '▲' : '▼') : '' }}</span>
+            </button>
+          </th>
+          <th [attr.aria-sort]="ariaSortFor('state')">
+            <button type="button" (click)="setSort('state')">
+              State
+              <span class="sort-indicator">{{ sortColumn() === 'state' ? (sortDirection() === 'asc' ? '▲' : '▼') : '' }}</span>
+            </button>
+          </th>
+          <th [attr.aria-sort]="ariaSortFor('cpu')">
+            <button type="button" (click)="setSort('cpu')">
+              CPU
+              <span class="sort-indicator">{{ sortColumn() === 'cpu' ? (sortDirection() === 'asc' ? '▲' : '▼') : '' }}</span>
+            </button>
+          </th>
+          <th [attr.aria-sort]="ariaSortFor('ram')">
+            <button type="button" (click)="setSort('ram')">
+              Memory
+              <span class="sort-indicator">{{ sortColumn() === 'ram' ? (sortDirection() === 'asc' ? '▲' : '▼') : '' }}</span>
+            </button>
+          </th>
         </tr>
       </thead>
       <tbody>
-        @for (c of containers(); track c.id) {
+        @for (c of sortedContainers(); track c.id) {
           <tr>
             <td>{{ c.name }}</td>
             <td>{{ c.image }}</td>

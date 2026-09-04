@@ -32,12 +32,15 @@ public class DockerContainerMapperTests
     [Fact]
     public void ToContainerStats_MapsAllFields()
     {
+        var createdAtUtc = new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero);
+
         var stats = DockerContainerMapper.ToContainerStats(
             id: "abc123",
             dockerNames: new[] { "/plex" },
             image: "plexinc/pms-docker:latest",
             state: "running",
             status: "Up 3 days",
+            createdAtUtc: createdAtUtc,
             cpuUsagePercent: 12.5,
             memoryUsageMb: 512);
 
@@ -46,6 +49,7 @@ public class DockerContainerMapperTests
         Assert.Equal("plexinc/pms-docker:latest", stats.Image);
         Assert.Equal("running", stats.State);
         Assert.Equal("Up 3 days", stats.Status);
+        Assert.Equal(createdAtUtc, stats.CreatedAtUtc);
         Assert.Equal(12.5, stats.CpuUsagePercent);
         Assert.Equal(512, stats.MemoryUsageMb);
     }

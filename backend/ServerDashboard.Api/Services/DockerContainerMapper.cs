@@ -13,6 +13,7 @@ public static class DockerContainerMapper
         string image,
         string state,
         string status,
+        DateTimeOffset createdAtUtc,
         double cpuUsagePercent,
         long memoryUsageMb)
     {
@@ -22,6 +23,7 @@ public static class DockerContainerMapper
             Image: image,
             State: state,
             Status: status,
+            CreatedAtUtc: createdAtUtc,
             CpuUsagePercent: cpuUsagePercent,
             MemoryUsageMb: memoryUsageMb
         );

@@ -6,6 +6,7 @@ public record ContainerStats(
     string Image,
     string State,
     string Status,
+    DateTimeOffset CreatedAtUtc,
     double CpuUsagePercent,
     long MemoryUsageMb
 );

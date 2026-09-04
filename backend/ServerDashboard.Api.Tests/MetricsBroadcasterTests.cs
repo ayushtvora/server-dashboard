@@ -19,7 +19,7 @@ public class MetricsBroadcasterTests
 
     private static readonly IReadOnlyList<ContainerStats> SampleContainers = new[]
     {
-        new ContainerStats("id1", "plex", "plexinc/pms-docker", "running", "Up 3 days", 1.5, 512)
+        new ContainerStats("id1", "plex", "plexinc/pms-docker", "running", "Up 3 days", DateTimeOffset.UtcNow, 1.5, 512)
     };
 
     private static (
