@@ -4,6 +4,7 @@ export interface SystemStats {
   memoryTotalMb: number;
   memoryUsedMb: number;
   cpuTemperatureCelsius: number | null;
+  uptimeSeconds: number;
 }
 
 export interface GpuStats {

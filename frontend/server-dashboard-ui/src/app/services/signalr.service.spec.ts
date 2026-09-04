@@ -31,6 +31,7 @@ const sampleSnapshot: ServerSnapshot = {
     memoryTotalMb: 1000,
     memoryUsedMb: 200,
     cpuTemperatureCelsius: 45,
+    uptimeSeconds: 3600,
   },
   gpu: {
     available: false,

@@ -1,7 +1,7 @@
 <main>
   <header>
     <h1>Server Dashboard</h1>
-    <app-server-status-badge [serverUp]="state.serverUp()" />
+    <app-server-status-badge [serverUp]="state.serverUp()" [uptimeSeconds]="state.system()?.uptimeSeconds ?? null" />
   </header>
 
   <div class="grid">

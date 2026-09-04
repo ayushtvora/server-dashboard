@@ -5,5 +5,6 @@ public record SystemStats(
     double MemoryUsagePercent,
     long MemoryTotalMb,
     long MemoryUsedMb,
-    double? CpuTemperatureCelsius
+    double? CpuTemperatureCelsius,
+    double UptimeSeconds
 );

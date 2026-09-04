@@ -17,6 +17,7 @@ function makeSnapshot(overrides: Partial<ServerSnapshot> = {}): ServerSnapshot {
       memoryTotalMb: 3,
       memoryUsedMb: 4,
       cpuTemperatureCelsius: null,
+      uptimeSeconds: 0,
     },
     gpu: {
       available: false,

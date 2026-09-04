@@ -39,7 +39,8 @@ public class SnapshotStore : ISnapshotStore
             MemoryUsagePercent: 0,
             MemoryTotalMb: 0,
             MemoryUsedMb: 0,
-            CpuTemperatureCelsius: null
+            CpuTemperatureCelsius: null,
+            UptimeSeconds: 0
         ),
         Gpu: new GpuStats(
             Available: false,

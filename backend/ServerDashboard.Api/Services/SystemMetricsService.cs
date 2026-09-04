@@ -12,6 +12,7 @@ public class SystemMetricsService : ISystemMetricsService
 {
     private const string ProcStatPath = "/proc/stat";
     private const string MemInfoPath = "/proc/meminfo";
+    private const string UptimePath = "/proc/uptime";
     private static readonly TimeSpan CpuSampleInterval = TimeSpan.FromMilliseconds(500);
 
     public async Task<SystemStats> GetCurrentAsync(CancellationToken cancellationToken = default)
@@ -39,8 +40,12 @@ public class SystemMetricsService : ISystemMetricsService
 
         double? cpuTemperatureCelsius = await ReadCpuTemperatureCelsiusAsync(cancellationToken);
 
+        double uptimeSeconds = UptimeParser.Parse(
+            await File.ReadAllTextAsync(UptimePath, cancellationToken));
+
         return new SystemStats(
-            cpuUsagePercent, memoryUsagePercent, memoryTotalMb, memoryUsedMb, cpuTemperatureCelsius);
+            cpuUsagePercent, memoryUsagePercent, memoryTotalMb, memoryUsedMb, cpuTemperatureCelsius,
+            uptimeSeconds);
     }
 
     // Shells out to lm-sensors, the same way GpuMetricsService shells out to

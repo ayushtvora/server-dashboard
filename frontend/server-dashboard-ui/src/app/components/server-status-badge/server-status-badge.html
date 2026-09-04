@@ -1,3 +1,7 @@
 <span class="badge" [class.up]="serverUp()" [class.down]="!serverUp()">
-  {{ serverUp() ? 'Server Up' : 'Server Down' }}
+  @if (serverUp() && uptimeLabel(); as uptime) {
+    Server Up - Uptime: {{ uptime }}
+  } @else {
+    {{ serverUp() ? 'Server Up' : 'Server Down' }}
+  }
 </span>
