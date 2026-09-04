@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Text.Json;
 using ServerDashboard.Api.Models;
 
 namespace ServerDashboard.Api.Services;
@@ -9,7 +12,6 @@ public class SystemMetricsService : ISystemMetricsService
 {
     private const string ProcStatPath = "/proc/stat";
     private const string MemInfoPath = "/proc/meminfo";
-    private const string ThermalClassPath = "/sys/class/thermal";
     private static readonly TimeSpan CpuSampleInterval = TimeSpan.FromMilliseconds(500);
 
     public async Task<SystemStats> GetCurrentAsync(CancellationToken cancellationToken = default)
@@ -41,33 +43,52 @@ public class SystemMetricsService : ISystemMetricsService
             cpuUsagePercent, memoryUsagePercent, memoryTotalMb, memoryUsedMb, cpuTemperatureCelsius);
     }
 
-    // Not every system exposes thermal zones (e.g. some VMs/containers), so
-    // this degrades to null rather than throwing, the same way GpuStats does
-    // for "no data available".
+    // Shells out to lm-sensors, the same way GpuMetricsService shells out to
+    // nvidia-smi. /sys/class/thermal's ACPI thermal zones aren't populated on
+    // every board (confirmed absent on the actual home server this targets),
+    // whereas `sensors` reads the CPU's hwmon driver (k10temp/coretemp)
+    // directly and normalizes the chip/label naming across AMD and Intel.
+    // Not every machine has lm-sensors installed (e.g. this doesn't exist on
+    // the Windows dev laptop), so this degrades to null rather than throwing,
+    // the same way GpuStats does for "no data available".
     private static async Task<double?> ReadCpuTemperatureCelsiusAsync(CancellationToken cancellationToken)
     {
-        if (!Directory.Exists(ThermalClassPath))
+        try
         {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "sensors",
+                Arguments = "-j",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process is null)
+            {
+                return null;
+            }
+
+            string output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken);
+
+            if (process.ExitCode != 0 || string.IsNullOrWhiteSpace(output))
+            {
+                return null;
+            }
+
+            return SensorsJsonParser.SelectCpuTemperatureCelsius(output);
+        }
+        catch (Win32Exception)
+        {
+            // lm-sensors ("sensors") isn't installed / not on PATH.
             return null;
         }
-
-        var zones = new List<ThermalZoneParser.ThermalZone>();
-
-        foreach (var zoneDir in Directory.EnumerateDirectories(ThermalClassPath, "thermal_zone*"))
+        catch (JsonException)
         {
-            try
-            {
-                string type = (await File.ReadAllTextAsync(Path.Combine(zoneDir, "type"), cancellationToken)).Trim();
-                string temp = await File.ReadAllTextAsync(Path.Combine(zoneDir, "temp"), cancellationToken);
-                zones.Add(new ThermalZoneParser.ThermalZone(type, temp));
-            }
-            catch (IOException)
-            {
-                // A zone can disappear or be unreadable between the directory
-                // listing and the read; just skip it.
-            }
+            // sensors ran but produced output we couldn't parse.
+            return null;
         }
-
-        return ThermalZoneParser.SelectCpuTemperatureCelsius(zones);
     }
 }

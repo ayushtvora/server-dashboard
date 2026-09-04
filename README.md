@@ -39,6 +39,10 @@ See [CLAUDE.md](CLAUDE.md) for a fuller breakdown of the data flow and each serv
 - An NVIDIA GPU with `nvidia-smi` on `PATH`, and a Docker daemon reachable — only needed for
   live GPU/container data; both degrade gracefully to "unavailable" when absent, which is
   the normal case on a Windows dev machine.
+- `lm-sensors` (the `sensors` command), with the CPU's temperature driver
+  (`k10temp`/`coretemp`) already loaded — only needed for the CPU temperature reading, which
+  degrades gracefully to "unavailable" when absent. The `dashboard-api` Docker image installs
+  this itself.
 
 ## Running it
 

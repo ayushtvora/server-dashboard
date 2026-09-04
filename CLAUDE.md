@@ -76,6 +76,22 @@ client's first paint, before its SignalR connection finishes negotiating).
   unit tests in `ServerDashboard.Api.Tests` using sample `/proc` text. This is the pattern
   to follow for `GpuMetricsService`/`DockerMetricsService` too: keep parsing/math separable
   and testable from the actual OS/process/socket calls.
+  - `CpuTemperatureCelsius` (nullable, same "no data" convention as `GpuStats`) is read by
+    shelling out to `sensors -j` (lm-sensors), the same pattern `GpuMetricsService` uses for
+    `nvidia-smi` — catching `Win32Exception` if `sensors` isn't installed and `JsonException`
+    if its output can't be parsed. This was chosen over reading
+    `/sys/class/thermal/thermal_zone*` directly because the actual home server's board
+    doesn't populate ACPI thermal zones at all (confirmed by inspection — only
+    `cooling_device*` entries exist, no `thermal_zone*`); `sensors` reads the CPU's hwmon
+    driver (`k10temp` on this AMD box, `coretemp` on Intel) instead, and normalizes the
+    chip/sensor naming across vendors. Parsing/selection is pure and unit tested in
+    `SensorsJsonParser`, which prefers a known CPU chip name (`k10temp`/`coretemp`) and a
+    known primary sensor label (`Tctl`/`Tdie`/`Package id 0`/`Physical id 0`) but falls back
+    to the first chip/sensor reported otherwise. Requires the `lm-sensors` package inside the
+    `dashboard-api` container (installed via `apt-get` in its `Dockerfile`) — it reads the
+    same host-shared `/sys/class/hwmon` the host's own `sensors` command does, so no
+    container-side `sensors-detect` is needed as long as the CPU's sensor kernel module is
+    already loaded on the host.
 
 - `Services/IGpuMetricsService` / `GpuMetricsService` — shells out to `nvidia-smi
   --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu
